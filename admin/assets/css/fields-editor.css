@@ -1,0 +1,17 @@
+.codobuf-editor { max-width: 900px; }
+.codobuf-fields-list { list-style: none; margin: 0; padding: 0; }
+.codobuf-field-item { border: 1px solid #ddd; padding: 12px; margin-bottom: 8px; background: #fff; }
+.codobuf-field-summary { display:flex; align-items:center; gap:12px; }
+.codobuf-field-summary .dashicons { cursor: move; margin-right: 6px; }
+.codobuf-field-preview { font-weight: 600; margin-right: 6px; }
+.codobuf-field-type-label { color:#666; margin-left:6px; }
+.codobuf-field-summary a { margin-left: 8px; text-decoration: none; }
+.codobuf-field-settings { margin-top: 8px; display:block; }
+.codobuf-field-settings.collapsed { display: none; }
+.codobuf-field-settings.open { display: block; }
+.codobuf-field-table td { vertical-align: top; padding-right: 12px; }
+.codobuf-editor-actions { margin-top: 10px; }
+.codobuf-required-star { color: #a00; }
+.codobuf-editor .codobuf-field-options { width: 100%; box-sizing: border-box; }
+.codobuf-col-label { width: 48%; }
+.codobuf-col-name { width: 48%; }
