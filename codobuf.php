@@ -92,15 +92,36 @@ add_action( 'admin_enqueue_scripts', function( $hook ) {
     wp_enqueue_style( 'dashicons' );
 }, 10, 1 );
 
+/**
+ * Frontend asset enqueue
+ */
+add_action( 'wp_enqueue_scripts', function() {
+    // Only load on pages with the calendar shortcode/block
+    if ( ! is_singular() && ! is_page() ) {
+        return;
+    }
+    
+    wp_enqueue_script(
+        'codobuf-frontend-integration',
+        CODOBUF_PLUGIN_URL . 'assets/js/frontend-integration.js',
+        [ 'jquery' ],
+        CODOBUF_PLUGIN_VERSION,
+        true
+    );
+} );
+
+add_action( 'wp_enqueue_scripts', function() {
+    wp_enqueue_style(
+        'codobuf-frontend',
+        CODOBUF_PLUGIN_URL . 'assets/css/frontend.css',
+        [],
+        CODOBUF_PLUGIN_VERSION
+    );
+} );
+
 /* --------------------------
  * Load translations
  * -------------------------- */
 add_action( 'init', function() {
     load_plugin_textdomain( 'codobuf', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 });
-
-add_action( 'admin_enqueue_scripts', function( $hook ) {
-    if ( strpos( $hook, 'codobookings' ) !== false ) {
-        error_log( 'Hook suffix: ' . $hook );
-    }
-}, 5 );

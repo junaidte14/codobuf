@@ -27,23 +27,33 @@ function codobuf_render_calendar_metabox( $post ) {
     $meta = get_post_meta( $post->ID, '_codobookings_user_fields', true );
     if ( ! is_array( $meta ) ) {
         $meta = [
-            'mode' => 'global',
+            'mode'          => 'global',
             'custom_fields' => wp_json_encode( codobuf_get_default_fields() ),
+            'position'      => 'before', // default
         ];
     }
 
     wp_nonce_field( 'codobuf_calendar_metabox_nonce', 'codobuf_calendar_nonce' );
 
-    $mode = isset( $meta['mode'] ) ? $meta['mode'] : 'global';
+    $mode        = isset( $meta['mode'] ) ? $meta['mode'] : 'global';
+    $position    = isset( $meta['position'] ) ? $meta['position'] : 'before'; // fallback
     $custom_json = isset( $meta['custom_fields'] ) ? $meta['custom_fields'] : wp_json_encode( codobuf_get_default_fields() );
     $custom_arr  = json_decode( $custom_json, true );
     if ( ! is_array( $custom_arr ) ) $custom_arr = [];
-
     ?>
+
+    <!-- FIELD MODE -->
     <p>
         <label><input type="radio" name="codobuf_fields_mode" value="global" <?php checked( $mode, 'global' ); ?>> <?php esc_html_e( 'Use Global User Fields (from plugin settings)', 'codobuf' ); ?></label><br>
         <label><input type="radio" name="codobuf_fields_mode" value="none" <?php checked( $mode, 'none' ); ?>> <?php esc_html_e( 'No User Fields', 'codobuf' ); ?></label><br>
         <label><input type="radio" name="codobuf_fields_mode" value="custom" <?php checked( $mode, 'custom' ); ?>> <?php esc_html_e( 'Custom for this calendar', 'codobuf' ); ?></label>
+    </p>
+
+    <!-- NEW POSITION SETTING -->
+    <p>
+        <strong><?php esc_html_e( 'Show User Fields', 'codobuf' ); ?>:</strong><br>
+        <label><input type="radio" name="codobuf_fields_position" value="before" <?php checked( $position, 'before' ); ?>> <?php esc_html_e( 'Before the Calendar', 'codobuf' ); ?></label><br>
+        <label><input type="radio" name="codobuf_fields_position" value="after" <?php checked( $position, 'after' ); ?>> <?php esc_html_e( 'After the Calendar', 'codobuf' ); ?></label>
     </p>
 
     <div id="codobuf-calendar-custom-editor" class="<?php echo ( $mode === 'custom' ) ? 'open' : 'collapsed'; ?>">
@@ -78,20 +88,29 @@ add_action( 'save_post', function( $post_id, $post ) {
 
     if ( ! current_user_can( 'edit_post', $post_id ) ) return;
 
+    // MODE
     $mode = isset( $_POST['codobuf_fields_mode'] ) ? sanitize_key( wp_unslash( $_POST['codobuf_fields_mode'] ) ) : 'global';
     if ( ! in_array( $mode, [ 'global', 'none', 'custom' ], true ) ) $mode = 'global';
 
+    // NEW POSITION SETTING
+    $position = isset( $_POST['codobuf_fields_position'] ) ? sanitize_key( wp_unslash( $_POST['codobuf_fields_position'] ) ) : 'before';
+    if ( ! in_array( $position, [ 'before', 'after' ], true ) ) {
+        $position = 'before';
+    }
+
+    // CUSTOM FIELDS
     $custom_raw = isset( $_POST['codobuf_calendar_custom_fields'] ) ? wp_unslash( $_POST['codobuf_calendar_custom_fields'] ) : '';
     $custom_arr = json_decode( $custom_raw, true );
     if ( ! is_array( $custom_arr ) ) $custom_arr = [];
 
-    // sanitize custom fields using common sanitizer (reuse behaviour)
     $clean_json = codobuf_sanitize_fields_array( $custom_arr );
-    $clean_arr = json_decode( $clean_json, true );
+    $clean_arr  = json_decode( $clean_json, true );
 
+    // SAVE ALL
     $meta = [
-        'mode' => $mode,
+        'mode'          => $mode,
         'custom_fields' => wp_json_encode( $clean_arr ),
+        'position'      => $position,
     ];
 
     update_post_meta( $post_id, '_codobookings_user_fields', $meta );

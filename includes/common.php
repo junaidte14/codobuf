@@ -153,7 +153,7 @@ function codobuf_render_field_html( $field, $value = '' ) {
     $html = '<div class="codobuf-field codobuf-field-' . esc_attr( $field['type'] ) . '">';
     $html .= '<label for="' . $name_attr . '">' . $label;
     if ( $field['required'] ) $html .= ' <span class="codobuf-required-star" aria-hidden="true">*</span>';
-    $html .= '</label><br>';
+    $html .= '</label>';
 
     switch ( $field['type'] ) {
         case 'number':
@@ -193,4 +193,150 @@ function codobuf_render_field_html( $field, $value = '' ) {
     $html .= '</div>';
 
     return $html;
+}
+
+/**
+ * Render user fields for a specific calendar post.
+ */
+function codobuf_render_user_fields_for_calendar( $calendar_id ) {
+    $fields = codobuf_get_fields_for_calendar( $calendar_id );
+    if ( empty( $fields ) ) return '';
+
+    ob_start();
+    echo '<div class="codobuf-user-fields-wrapper">';
+    foreach ( $fields as $field ) {
+        echo codobuf_render_field_html( $field );
+    }
+    echo '</div>';
+
+    return ob_get_clean();
+}
+
+add_action( 'codobookings_before_calendar', function( $calendar_id ) {
+    $meta = get_post_meta( $calendar_id, '_codobookings_user_fields', true );
+    $position = isset( $meta['position'] ) ? $meta['position'] : 'before';
+
+    // Only render here if position is BEFORE
+    if ( $position === 'before' ) {
+        echo codobuf_render_user_fields_for_calendar( $calendar_id );
+    }
+});
+
+add_action( 'codobookings_after_calendar', function( $calendar_id ) {
+    $meta = get_post_meta( $calendar_id, '_codobookings_user_fields', true );
+    $position = isset( $meta['position'] ) ? $meta['position'] : 'before';
+
+    // Only render here if position is AFTER
+    if ( $position === 'after' ) {
+        echo codobuf_render_user_fields_for_calendar( $calendar_id );
+    }
+});
+
+/**
+ * Capture user fields data before booking is inserted
+ */
+add_filter( 'codobookings_before_booking_insert', 'codobuf_capture_user_fields', 10, 1 );
+function codobuf_capture_user_fields( $booking_data ) {
+
+    if ( empty( $booking_data['calendar_id'] ) ) {
+        return $booking_data;
+    }
+
+    $calendar_id = absint( $booking_data['calendar_id'] );
+    $fields = codobuf_get_fields_for_calendar( $calendar_id );
+    
+    if ( empty( $fields ) ) {
+        return $booking_data;
+    }
+
+    $saved = [];
+
+    foreach ( $fields as $field ) {
+        $key = 'codobuf_' . $field['name'];
+        $raw = null;
+
+        // Check multiple sources for the data
+        if ( isset( $booking_data[ $key ] ) ) {
+            $raw = $booking_data[ $key ];
+        } elseif ( isset( $_POST[ $key ] ) ) {
+            $raw = wp_unslash( $_POST[ $key ] );
+        } elseif ( isset( $_REQUEST[ $key ] ) ) {
+            $raw = wp_unslash( $_REQUEST[ $key ] );
+        }
+
+        if ( $raw === null ) {
+            // Handle unchecked checkboxes
+            if ( $field['type'] === 'checkbox' ) {
+                $saved[ $field['name'] ] = 0;
+            }
+            continue;
+        }
+
+        // Sanitize based on field type
+        switch ( $field['type'] ) {
+            case 'number':
+                $saved[ $field['name'] ] = floatval( $raw );
+                break;
+            case 'checkbox':
+                $saved[ $field['name'] ] = ( $raw === '1' || $raw === 1 || $raw === true ) ? 1 : 0;
+                break;
+            default:
+                $saved[ $field['name'] ] = sanitize_text_field( $raw );
+        }
+    }
+
+    $booking_data['user_fields_data'] = $saved;
+
+    return $booking_data;
+}
+
+/**
+ * Store user fields meta after booking is created
+ */
+add_action( 'codobookings_after_ajax_create_booking', 'codobuf_store_user_fields_meta', 10, 2 );
+function codobuf_store_user_fields_meta( $booking_id, $booking_data ) {
+
+    $saved = isset( $booking_data['user_fields_data'] ) ? $booking_data['user_fields_data'] : [];
+
+    if ( ! empty( $saved ) ) {
+        update_post_meta( $booking_id, '_codobuf_user_fields', wp_json_encode( $saved ) );
+    }
+}
+
+add_action( 'add_meta_boxes_codo_booking', 'codobuf_add_booking_user_fields_metabox' );
+function codobuf_add_booking_user_fields_metabox() {
+    add_meta_box(
+        'codobuf-booking-fields',
+        __('User Fields Data', 'codobuf'),
+        'codobuf_render_booking_user_fields_metabox',
+        'codo_booking',
+        'normal',
+        'default'
+    );
+}
+
+function codobuf_render_booking_user_fields_metabox( $post ) {
+
+    $json = get_post_meta( $post->ID, '_codobuf_user_fields', true );
+    
+    $data = json_decode( $json, true );
+
+    if ( empty( $data ) ) {
+        echo '<p>No user field data saved for this booking.</p>';
+        return;
+    }
+
+    echo '<table class="widefat striped"><tbody>';
+
+    foreach ( $data as $name => $value ) {
+        $label = $name; // fallback
+
+        // Try to detect original label (optional improvement)
+        echo '<tr>
+                <th style="width:200px;">' . esc_html( ucwords( str_replace('_',' ', $name ) ) ) . '</th>
+                <td>' . esc_html( $value ) . '</td>
+              </tr>';
+    }
+
+    echo '</tbody></table>';
 }

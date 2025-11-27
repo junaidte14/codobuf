@@ -1,0 +1,44 @@
+.codobuf-user-fields-wrapper {
+    margin: 20px 0;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.codobuf-field {
+    margin-bottom: 15px;
+}
+
+.codobuf-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #333;
+}
+
+.codobuf-required-star {
+    color: #dc3232;
+}
+
+.codobuf-field input[type="text"],
+.codobuf-field input[type="number"],
+.codobuf-field input[type="email"],
+.codobuf-field textarea,
+.codobuf-field select {
+    width: 96%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.codobuf-field textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.codobuf-field input[type="radio"],
+.codobuf-field input[type="checkbox"] {
+    margin-right: 6px;
+}
