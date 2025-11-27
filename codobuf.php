@@ -5,6 +5,7 @@
  * Description: Adds a drag & drop dynamic User Fields system for CodoBookings (global settings + calendar metabox).
  * Version:     1.0.0
  * Author:      Junaid Hassan / Codoplex
+ * Author URI: https://codoplex.com/
  * Text Domain: codobuf
  * Domain Path: /languages
  */
@@ -16,14 +17,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 /* --------------------------
  * Constants
  * -------------------------- */
+if ( ! defined( 'CODOBUF_PLUGIN_VERSION' ) ) {
+    define( 'CODOBUF_PLUGIN_VERSION', '1.0.0' );
+}
 if ( ! defined( 'CODOBUF_PLUGIN_DIR' ) ) {
     define( 'CODOBUF_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 }
 if ( ! defined( 'CODOBUF_PLUGIN_URL' ) ) {
     define( 'CODOBUF_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-}
-if ( ! defined( 'CODOBUF_PLUGIN_VERSION' ) ) {
-    define( 'CODOBUF_PLUGIN_VERSION', '1.0.0' );
 }
 
 /* --------------------------
