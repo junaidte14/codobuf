@@ -27,7 +27,7 @@ function codobuf_render_calendar_metabox( $post ) {
     $meta = get_post_meta( $post->ID, '_codobookings_user_fields', true );
     if ( ! is_array( $meta ) ) {
         $meta = [
-            'mode'          => 'global',
+            'mode'          => 'none',
             'custom_fields' => wp_json_encode( codobuf_get_default_fields() ),
             'position'      => 'before', // default
         ];
@@ -35,7 +35,7 @@ function codobuf_render_calendar_metabox( $post ) {
 
     wp_nonce_field( 'codobuf_calendar_metabox_nonce', 'codobuf_calendar_nonce' );
 
-    $mode        = isset( $meta['mode'] ) ? $meta['mode'] : 'global';
+    $mode        = isset( $meta['mode'] ) ? $meta['mode'] : 'none';
     $position    = isset( $meta['position'] ) ? $meta['position'] : 'before'; // fallback
     $custom_json = isset( $meta['custom_fields'] ) ? $meta['custom_fields'] : wp_json_encode( codobuf_get_default_fields() );
     $custom_arr  = json_decode( $custom_json, true );
